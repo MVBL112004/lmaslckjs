@@ -28,7 +28,7 @@ TELEGRAM_BOT_TOKEN = None
 TELEGRAM_CHAT_ID   = None
 
 # ================== KEY VIP VTH GAME ==================
-KEY_VTH_URL = 'https://raw.githubusercontent.com/MVBL112004/server_key/main/keyvth.txt'
+KEY_VTH_URL = 'https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/keyvth.txt'
 
 def _parse_expiry_datetime(exp_str: str):
     """Parse chuỗi thời gian thành datetime"""
