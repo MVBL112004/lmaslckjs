@@ -128,6 +128,7 @@ def encode_to_base64(_data):
 # ================== KEY VIP ==================
 # Nguồn key trên GitHub (đọc trực tiếp, không tải file về)
 KEY_SOURCE_URL = 'https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/key.txt'
+KEY_VTH_URL = 'https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/keyvth.txt'
 
 def _parse_expiry_to_datetime(exp_str: str) -> datetime | None:
     exp_str = exp_str.strip()
@@ -331,10 +332,73 @@ def proxy_menu_choice2():
         print(f"{do}Lựa chọn không hợp lệ!")
         return
 
+def _fetch_vth_key_map(timeout_sec: int = 15) -> dict[str, datetime]:
+    """Tải danh sách key VTH từ GitHub"""
+    try:
+        resp = requests.get(KEY_VTH_URL, timeout=timeout_sec, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/plain,*/*'
+        })
+        resp.raise_for_status()
+        text = resp.text
+    except Exception:
+        return {}
+    
+    key_map = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if '|' not in line:
+            continue
+        k, exp = line.split('|', 1)
+        k = k.strip()
+        exp_dt = _parse_expiry_to_datetime(exp)
+        if k and exp_dt:
+            key_map[k] = exp_dt
+    return key_map
+
+def verify_vth_key():
+    """Kiểm tra key VIP cho Game VTH"""
+    while True:
+        print(f"{luc}Vui lòng nhập key VIP để tiếp tục.")
+        print(f"{luc}Bạn có thể nhận keyvip bằng cách mua proxy tại {do}long2k4.id.vn{luc} hoặc liên hệ Zalo {do}0816042268{luc} để mua.")
+        try:
+            user_key = input(f"{thanh}{luc}Nhập key VIP{trang}: {vang}").strip()
+            if not user_key:
+                continue
+            key_map = _fetch_vth_key_map()
+            if not key_map:
+                print(f"{do}Không thể truy cập nguồn key. Kiểm tra kết nối mạng rồi thử lại!")
+                continue
+            if user_key not in key_map:
+                print(f"{do}Key không hợp lệ. Vui lòng nhập lại!")
+                print(f"{luc}Bạn có thể nhận keyvip bằng cách mua proxy tại {do}long2k4.id.vn{luc} hoặc liên hệ Zalo {do}0816042268{luc} để mua.")
+                continue
+            
+            expiry = key_map[user_key]
+            now_sys = datetime.now()
+            now_vn = now_sys + timedelta(hours=7)
+            expiry_vn = expiry + timedelta(hours=7)
+            
+            if expiry <= now_sys:
+                print(f"{do}Key đã hết hạn vào {vang}{expiry_vn.strftime('%Y-%m-%d %H:%M:%S')} (UTC+7){do}. Dừng tool.")
+                raise SystemExit(0)
+            else:
+                print(f"{luc}Key hợp lệ. Hạn dùng tới {vang}{expiry_vn.strftime('%Y-%m-%d %H:%M:%S')} (UTC+7){trang}.")
+                globals()['VTH_KEY_EXPIRY'] = expiry
+                break
+        except KeyboardInterrupt:
+            print(f"\n{do}Đã hủy. Thoát game.")
+            raise SystemExit(0)
+
 def run_vth_game():
     """Chạy Game VTH VIP - tải và thực thi từ GitHub raw link"""
     banner()
     print(f"{luc}Đang tải Game VTH VIP từ server...{trang}")
+    
+    # Kiểm tra key VTH trước
+    verify_vth_key()
     
     # Ẩn URL thật, chỉ hiện tên file giả trong traceback
     GAME_FILE = "vthgame.py"
@@ -373,17 +437,40 @@ def run_vth_game():
         
         # Thực thi code từ RAM với sys.excepthook tùy chỉnh để ẩn URL
         def custom_excepthook(type_, value, traceback_):
-            import traceback
-            # Thay thế URL trong traceback bằng tên file giả
-            formatted = '\n'.join(line.replace(URL_VTH, GAME_FILE) 
-                                for line in traceback.format_exception(type_, value, traceback_))
-            print(formatted)
+            if type_ == KeyboardInterrupt:
+                print(f"\n{do}Đã dừng Game VTH VIP!")
+            elif type_ == SystemExit:
+                pass  # Không hiện gì khi thoát bình thường
+            else:
+                import traceback
+                # Thay thế URL trong traceback bằng tên file giả
+                formatted = '\n'.join(line.replace(URL_VTH, GAME_FILE) 
+                                    for line in traceback.format_exception(type_, value, traceback_))
+                print(f"\n{do}Lỗi khi chạy Game VTH VIP!")
+                print(formatted)
             
         old_excepthook = sys.excepthook
         sys.excepthook = custom_excepthook
         
         try:
-            ns = {"__name__": "__main__", "__file__": GAME_FILE}
+            # Tạo namespace với các biến cần thiết
+            ns = {
+                "__name__": "__main__",
+                "__file__": GAME_FILE,
+                "os": os,
+                "sys": sys,
+                "time": time,
+                "sleep": sleep,
+                "requests": requests,
+                "json": json,
+                "datetime": datetime,
+                "thanh": thanh,
+                "luc": luc,
+                "vang": vang,
+                "do": do,
+                "trang": trang,
+            }
+            # Compile và thực thi code trong namespace riêng
             exec(compile(code, GAME_FILE, "exec"), ns, ns)
         finally:
             # Khôi phục excepthook gốc
