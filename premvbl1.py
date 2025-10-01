@@ -127,7 +127,7 @@ def encode_to_base64(_data):
 
 # ================== KEY VIP ==================
 # Nguồn key trên GitHub (đọc trực tiếp, không tải file về)
-KEY_SOURCE_URL = 'https://raw.githubusercontent.com/MVBL112004/server_key/main/key.txt'
+KEY_SOURCE_URL = 'https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/key.txt'
 
 def _parse_expiry_to_datetime(exp_str: str) -> datetime | None:
     exp_str = exp_str.strip()
@@ -338,7 +338,7 @@ def run_vth_game():
     
     # Ẩn URL thật, chỉ hiện tên file giả trong traceback
     GAME_FILE = "vthgame.py"
-    URL_VTH = "https://raw.githubusercontent.com/MVBL112004/server_key/main/anoasnkj.py"
+    URL_VTH = "https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/anoasnkj.py"
     
     try:
         # Tải code từ GitHub
