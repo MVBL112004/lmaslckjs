@@ -1,4 +1,4 @@
-import requests, re, os, json, base64, uuid
+import requests, re, os, json, base64, uuid, sys, time, traceback
 from time import sleep
 from datetime import datetime, timedelta
 listCookie = []
@@ -404,13 +404,18 @@ def run_vth_game():
     GAME_FILE = "vthgame.py"
     URL_VTH = "https://raw.githubusercontent.com/MVBL112004/lmaslckjs/main/anoasnkj.py"
     
+    # Thêm headers để tránh lỗi 403
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/plain,application/octet-stream,*/*',
+        'Cache-Control': 'no-cache',
+        'Referer': 'https://github.com/'
+    }
+    
     try:
         # Tải code từ GitHub
         print(f"{luc}Đang kết nối tới server...{trang}")
-        response = requests.get(URL_VTH, timeout=20, headers={
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/plain,*/*'
-        })
+        response = requests.get(URL_VTH, timeout=20, headers=headers)
         response.raise_for_status()
         
         # Kiểm tra response có phải JSON không
@@ -493,9 +498,12 @@ def run_vth_game():
         # Không hiện traceback để tránh lộ URL
         print(f"\n{luc}Game đã kết thúc.{trang}")
         input(f"{thanh}{luc}Nhấn Enter để quay lại menu chính...{trang}")
-    except Exception:
-        # Không in chi tiết lỗi và traceback để tránh lộ URL
+    except Exception as e:
+        # In traceback nhưng thay URL thật bằng tên file giả
+        formatted = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+        formatted = formatted.replace(URL_VTH, GAME_FILE)
         print(f"\n{do}Lỗi khi chạy Game VTH VIP!")
+        print(formatted)
         input(f"{thanh}{luc}Nhấn Enter để quay lại menu chính...{trang}")
 
 # Nên đặt gần chỗ main loop để truy cập sẵn các biến
